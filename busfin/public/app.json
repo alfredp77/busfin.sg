@@ -1,0 +1,32 @@
+{
+    "devtools_port": 9090,
+    "startup_app": {
+      "name": "BusfinPOC",
+      "description": "Busfin POC",
+      "url": "http://localhost:7777",
+      "showTaskbarIcon": true,
+      "taskbarIcon": "http://localhost:7777/bus.ico",
+      "icon": "http://localhost:7777/bus.ico",
+      "uuid": "Bus app using react-redux-openfin POC",
+      "autoShow": true,
+      "contextMenu": true,
+      "defaultWidth": 480,
+      "maxWidth": 480,
+      "minWidth": 480,
+      "defaultHeight": 120,
+      "maxHeight": 120,
+      "minHeight": 120,
+      "frame": true,
+      "defaultCentered": true,
+      "resizable": false
+    },
+    "runtime": {
+      "arguments": "--enable-crash-reporting --no-sandbox",
+      "version": "stable"
+    },
+    "shortcut": {
+      "company": "Codingcat",
+      "description": "Bus app using react-redux-openfin POC",
+      "name": "Busfin"
+    }
+  }
