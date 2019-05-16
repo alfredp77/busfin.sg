@@ -13,7 +13,7 @@
     "typescript": "3.4.5"
   },
   "scripts": {
-    "start": "react-scripts start",
+    "start": "parcel public/*.html bus.ico -p 7777",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"
