@@ -2,6 +2,7 @@ import { BusStop } from '../models/DataMall';
 import { AnyAction, ActionCreator, Dispatch } from 'redux';
 import { ltaDataMall } from '../utils/DataMallService';
 import { ThunkAction } from 'redux-thunk';
+import { LoadErrorAction, LOAD_ERROR } from './ErrorAction';
 
 export interface BusStopsState {
     BusStops: BusStop[]
@@ -19,9 +20,6 @@ export type LOAD_BUS_STOPS = typeof LOAD_BUS_STOPS;
 export const BUS_STOPS_LOADED = 'BUS_STOPS_LOADED';
 export type BUS_STOPS_LOADED = typeof BUS_STOPS_LOADED;
 
-export const LOAD_ERROR = 'LOAD_ERROR';
-export type LOAD_ERROR = typeof LOAD_ERROR;
-
 export interface LoadBusStopsAction extends AnyAction {
     type: LOAD_BUS_STOPS;
 }
@@ -29,11 +27,6 @@ export interface LoadBusStopsAction extends AnyAction {
 export interface BusStopsLoadedAction extends AnyAction {
     type: BUS_STOPS_LOADED;
     busStops: BusStop[];
-}
-
-export interface LoadErrorAction extends AnyAction {
-    type: LOAD_ERROR;
-    message: any;
 }
 
 export type BusStopsAction = LoadBusStopsAction | BusStopsLoadedAction | LoadErrorAction;
