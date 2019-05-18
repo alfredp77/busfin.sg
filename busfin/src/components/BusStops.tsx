@@ -82,7 +82,6 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
 
 export const mapStateToProps = (rootState: RootState) => {
     return {
-        Search: rootState.BusStops.Search,
         BusStops: rootState.BusStops.BusStops,
         IsLoading: rootState.BusStops.IsLoading
     }

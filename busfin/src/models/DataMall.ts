@@ -27,7 +27,7 @@ export interface NextBusInfo {
     Type: string
 }
 
-export interface ArrivalData {
+export interface ArrivalData {    
     BusStop: BusStop
     Arrival: BusArrival
 }

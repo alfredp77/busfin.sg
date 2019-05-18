@@ -1,9 +1,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { ArrivalData } from '../models/DataMall';
+import { ArrivalData, BusStop } from '../models/DataMall';
 import { RootState } from '../redux/RootState';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
+import { createRemoveArrivalAction, createLoadArrivalsAction } from '../redux/ArrivalsState';
+import { connect, Provider } from 'react-redux';
+import { store } from '../redux/Store';
+
 
 interface ArrivalsProps {
     arrivals: ArrivalData[]
@@ -11,6 +15,7 @@ interface ArrivalsProps {
 
 interface ArrivalsActions {
     removeArrival: (arrival:ArrivalData) => void
+    loadArrivals: (busStops:BusStop[]) => void
 }
 
 export class ArrivalsDisplay extends React.Component<ArrivalsProps & ArrivalsActions, any> {
@@ -38,32 +43,30 @@ export const ArrivalItemDisplay = (props:ArrivalItemProps) => {
 }
 
 
-// export const mapStateToProps = (rootState: RootState) => {
-//     return {
-//         Search: rootState.BusStops.Search,
-//         BusStops: rootState.BusStops.BusStops,
-//         IsLoading: rootState.BusStops.IsLoading
-//     }
-// }
-  
-// export const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
-//     return {
-//       startLoading: () => dispatch(createLoadBusStopsAction('')),
-//       findBusStops: (busStopNumber: string) => dispatch(createLoadBusStopsAction(busStopNumber)),
-//     };
-// };
+export const mapStateToProps = (rootState: RootState) => {
+    return {
+        arrivals: rootState.Arrivals.Arrivals
+    }
+}
 
-// export const BusStopsContainer = connect(
-//     mapStateToProps,
-//     mapDispatchToProps,
-// ) (BusStopsDisplay);
+export const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+    return {
+        removeArrival: (arrival:ArrivalData) => dispatch(createRemoveArrivalAction(arrival)),
+        loadArrivals: (busStops:BusStop[]) => dispatch(createLoadArrivalsAction(busStops))
+    }
+}
 
-// export const BusStopsComponent = () => {
-//     return (
-//         <Provider store={store}>
-//             <BusStopsContainer />
-//         </Provider>
-//     );
-// }
+export const ArrivalsContainer = connect(
+    mapStateToProps,
+    mapDispatchToProps,
+) (ArrivalsDisplay);
 
-// ReactDOM.render(<BusStopsComponent />, document.getElementById('root'));
+export const ArrivalsComponent = () => {
+    return (
+        <Provider store={store}>
+            <ArrivalsContainer />
+        </Provider>
+    );
+}
+
+ReactDOM.render(<ArrivalsComponent />, document.getElementById('root'));
