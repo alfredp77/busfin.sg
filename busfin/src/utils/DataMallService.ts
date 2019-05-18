@@ -1,5 +1,5 @@
 import { Location, LocationServiceApi } from './LocationService';
-import { BusStop } from '../models/BusStop';
+import { BusStop, BusArrival } from '../models/DataMall';
 
 const apiKey='j+7DlElbSw2PA5AzgeAtZA==';
 const headers = {
@@ -8,8 +8,13 @@ const headers = {
 }
 const baseUrl = 'http://datamall2.mytransport.sg/ltaodataservice/';
 
-interface DataMallResponse<T> {
+interface DataMallPagedResponse<T> {
     value: T[]
+}
+
+interface DataMallArrivalResponse {
+    BusStopCode: string,
+    Services: BusArrival[]
 }
 
 export class LTADataMall {
@@ -17,8 +22,19 @@ export class LTADataMall {
         
     }
 
+    async getBusArrivals(busStopNumber:string): Promise<BusArrival[]> {
+        try {
+            const path = `BusArrivalv2?BusStopCode=${busStopNumber}`;
+            const response = await this.fetchFromDataMall<DataMallArrivalResponse>(path);
+            return response.Services;
+        } catch (e) {
+            console.log(`Failed to fetch bus arrival:${e}`);
+            return [];
+        }
+    }
+
     async searchBusStop(busStopNumber:string): Promise<BusStop[]> {
-        return await this.fetchData('BusStops', data => {
+        return await this.fetchPagedData('BusStops', data => {
             if (busStopNumber === '' || (data.BusStopCode && data.BusStopCode.startsWith(busStopNumber)))
                 return true;
             return false;
@@ -41,32 +57,36 @@ export class LTADataMall {
     //     });
     // }
 
-    private async fetchData<T>(name:string, filter: (arg:T) => boolean): Promise<T[]> {
+    private async fetchPagedData<T>(name:string, filter: (arg:T) => boolean): Promise<T[]> {
         const skipCount = 500;
         let currentSkip = 0;
         let lastRetrievedCount = 0;
         let result:T[] = [];
-        let url = `${baseUrl}${name}`;
-        let corsSafe = `https://cors-anywhere.herokuapp.com/${url}`
+        
         while (lastRetrievedCount === 0 || lastRetrievedCount >= skipCount) {
-            let endpoint = currentSkip === 0 ? corsSafe : `${corsSafe}?$skip=${currentSkip}`;
-            let response = await fetch(endpoint, {
-                method: 'GET',
-                headers: headers
-            })
-            if (response.ok) {
-                const jsonResponse = await response.json() as DataMallResponse<T>;
-                const items = jsonResponse.value;
-                console.log(items);
-                const filtered = items.filter(filter);
-                result = result.concat(filtered)
-                lastRetrievedCount=items.length;
-                currentSkip+=skipCount;
-            } else {
-                throw new Error('Unable to find data');
-            }
+            let path = currentSkip === 0 ? name : `${name}?$skip=${currentSkip}`;
+            const response = await this.fetchFromDataMall<DataMallPagedResponse<T>>(path);
+            const items = response.value;
+            console.log(items);
+            const filtered = items.filter(filter);
+            result = result.concat(filtered)
+            lastRetrievedCount=items.length;
+            currentSkip+=skipCount;            
         }
         return result;
+    }
+
+    private async fetchFromDataMall<T>(path:string): Promise<T>{
+        let endpoint = `https://cors-anywhere.herokuapp.com/${baseUrl}${path}`;
+        let response = await fetch(endpoint, {
+            method: 'GET',
+            headers: headers
+        })
+        if (!response.ok) {
+            throw new Error('Unable to find data');
+        } 
+
+        return await response.json() as T;
     }
 }
 

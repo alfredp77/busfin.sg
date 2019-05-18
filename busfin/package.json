@@ -9,6 +9,7 @@
     "@types/react-dom": "16.8.4",
     "@types/react-redux": "^7.0.9",
     "@types/redux-thunk": "^2.1.0",
+    "moment": "^2.24.0",
     "openfin-launcher": "^1.4.8",
     "react": "^16.8.6",
     "react-dom": "^16.8.6",

@@ -1,4 +1,4 @@
-import { BusStop } from '../models/BusStop';
+import { BusStop } from '../models/DataMall';
 import { AnyAction, ActionCreator, Dispatch } from 'redux';
 import { ltaDataMall } from '../utils/DataMallService';
 import { ThunkAction } from 'redux-thunk';

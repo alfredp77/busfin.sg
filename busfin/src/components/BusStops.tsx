@@ -1,7 +1,7 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { Loading } from './Loading';
-import { BusStop } from '../models/BusStop';
+import { BusStop } from '../models/DataMall';
 import { connect, Provider } from 'react-redux';
 import { RootState } from '../redux/RootState';
 import { BusStopsState, BusStopsAction, createLoadBusStopsAction } from '../redux/BusStopsState';
