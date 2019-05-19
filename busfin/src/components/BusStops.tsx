@@ -5,10 +5,12 @@ import { BusStop } from '../models/DataMall';
 import { BusStopComponent } from './BusStop';
 import { connect, Provider } from 'react-redux';
 import { RootState } from '../redux/RootState';
-import { BusStopsState, BusStopsAction, createLoadBusStopsAction } from '../redux/BusStopsState';
+import { createLoadBusStopsAction } from '../redux/BusStopsState';
 import { ThunkDispatch } from 'redux-thunk';
 import { AnyAction } from 'redux';
 import { store } from '../redux/Store';
+import { InterApplicationService } from '../utils/InterApplicationService';
+import { BUS_STOP_ARRIVALS } from '../components/Topics';
 
 interface BusStopsProps {
     BusStops: BusStop[]
@@ -25,12 +27,18 @@ interface BusStopsDisplayState {
     nearest: boolean
 }
 export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsActions, BusStopsDisplayState> {
-    constructor(props:any) {
+    private interAppService:InterApplicationService;
+
+    constructor(props:any, 
+        interAppService?:InterApplicationService) {
+
         super(props);
         this.state = { search: '', nearest: false};
+        this.interAppService = interAppService ? interAppService : InterApplicationService.getInstance();
         this.fetchBusStops = this.fetchBusStops.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleNearestChange = this.handleNearestChange.bind(this);
+        this.handleGetArrivals = this.handleGetArrivals.bind(this);
     }
 
     fetchBusStops() {
@@ -43,6 +51,10 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
 
     handleNearestChange(e:React.ChangeEvent<HTMLInputElement>) {
         this.setState({ nearest: e.target.checked });
+    }
+
+    handleGetArrivals(busStop:BusStop) {
+        this.interAppService.publish(BUS_STOP_ARRIVALS, busStop);
     }
 
     render() {
@@ -70,7 +82,10 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
                     <Loading /> : 
                     <ul>
                         {
-                            this.props.BusStops.map(busStop => <BusStopComponent key={busStop.BusStopCode} busStop={busStop} />)
+                            this.props.BusStops.map(busStop => <BusStopComponent 
+                                key={busStop.BusStopCode} 
+                                busStop={busStop}
+                                getArrivals={this.handleGetArrivals} />)
                         }
                     </ul>}                
             </div>

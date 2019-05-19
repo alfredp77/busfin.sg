@@ -1,17 +1,17 @@
-export function toDictionary<T>(array: T[], keyFunc: (item:T) => string) {
-    const normalizedObject: { [key:string]: T} = {}
+export function toDictionary<T,VKey>(array: T[], keyFunc: (item:T) => VKey) {
+    const dict = new Map<VKey, T>();
     for (let i = 0; i < array.length; i++) {
          const key = keyFunc(array[i])
-         normalizedObject[key] = array[i]
+         dict.set(key, array[i])
     }
-
-    return normalizedObject;
+    return dict;
 }
 
 export function removeFromArray<T>(item:T, fromArray:T[]): T[] {
     const index = fromArray.indexOf(item);
     if (index >= 0) {
-        return fromArray.splice(index, 1);
+        let empty:T[] = []
+        return empty.concat(fromArray).splice(index, 1);
     }
     return fromArray;
 }
