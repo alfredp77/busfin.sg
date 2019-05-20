@@ -3,7 +3,7 @@ import * as ReactDOM from 'react-dom';
 import { ArrivalData, BusStop } from '../models/DataMall';
 import { RootState } from '../redux/RootState';
 import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction, Store } from 'redux';
+import { AnyAction } from 'redux';
 import { createRemoveArrivalAction, createLoadArrivalsAction, createAddBusStopAction } from '../redux/ArrivalsState';
 import { connect, Provider } from 'react-redux';
 import { store as realStore } from '../redux/Store';
@@ -38,10 +38,13 @@ interface ArrivalItemProps {
 }
 
 export const ArrivalItemDisplay = (props:ArrivalItemProps) => {
+    console.log(JSON.stringify(props.arrival.Arrival));
     return (
         <div className="arrivalItem">                        
             [{props.arrival.BusStop.BusStopCode}] [{props.arrival.Arrival.ServiceNo}] 
-            {props.arrival.Arrival.NextBus.map(info => `[${info.EstimatedArrivalInMins}]` )}
+            [{props.arrival.Arrival.NextBus.EstimatedArrivalInMins}]
+            [{props.arrival.Arrival.NextBus2.EstimatedArrivalInMins}]
+            [{props.arrival.Arrival.NextBus3.EstimatedArrivalInMins}] )}
         </div>
     )
 }
@@ -67,19 +70,15 @@ export const ArrivalsContainer = connect(
 ) (ArrivalsDisplay);
 
 export class ArrivalsComponent extends React.Component {
-    private store:Store<RootState, AnyAction>;
-    private interAppService:InterApplicationService;
+    public store = realStore;
+    public interAppService = InterApplicationService.getInstance();
 
-    constructor(props:any, 
-        store?:Store<RootState, AnyAction>,
-        interAppService?:InterApplicationService) {
+    constructor(props:any) {
         super(props);
-        
-        this.store = store ? store : realStore;
-        this.interAppService = interAppService ? interAppService : InterApplicationService.getInstance();
+
         this.handleIncomingMessage = this.handleIncomingMessage.bind(this);
     }
-
+    
     componentDidMount() {
         // subscribe to notifications
         this.interAppService.subscribe(BUS_STOP_ARRIVALS, this.handleIncomingMessage);
@@ -88,10 +87,10 @@ export class ArrivalsComponent extends React.Component {
     }
 
     handleIncomingMessage(busStop:BusStop) {
-        this.store.dispatch(createAddBusStopAction(busStop));
-
-        const state = this.store.getState().Arrivals;
         const dispatch = this.store.dispatch as ThunkDispatch<any, any, AnyAction>;
+        dispatch(createAddBusStopAction(busStop));
+
+        const state = this.store.getState().Arrivals;        
         dispatch(createLoadArrivalsAction(state.BusStops, state.Arrivals));
     }
 

@@ -11,13 +11,16 @@ export interface BusStop {
 export interface BusArrival {
     ServiceNo: string
     Operator: string
-    NextBus: NextBusInfo[]
+    NextBus: NextBusInfo
+    NextBus2: NextBusInfo
+    NextBus3: NextBusInfo
 }
 
 export interface NextBusInfo {
     OriginCode: string
     DestinationCode: string
-    EstimatedArrival: Moment
+    EstimatedArrival: string
+    EstimatedArrivalTime?: Moment
     EstimatedArrivalInMins?: number
     Latitude: number
     Longitude: number

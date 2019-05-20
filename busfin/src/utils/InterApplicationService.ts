@@ -13,7 +13,8 @@ export class InterApplicationService {
     }
 
     publish<T>(topic:string, message:T) {
-        //@ts-ignore
+        console.log(`Publishing message: ${JSON.stringify(message)}`);
+        //@ts-ignore        
         fin.desktop.InterApplicationBus.publish(topic, message);
     }
 
@@ -21,8 +22,10 @@ export class InterApplicationService {
         //@ts-ignore
         fin.desktop.InterApplicationBus.subscribe("*",topic,
         function (incoming:any, uuid:any) {
+            console.log(`There is incoming message: ${JSON.stringify(incoming)}`);
             const message = incoming as T;
             if (message) {
+                console.log("Calling the callback")
                 callback(message);
             }
         });

@@ -60,8 +60,10 @@ export const createLoadArrivalsAction: ActionCreator<ThunkAction<Promise<Arrival
             };
             dispatch(loadingAction);
             
+            const existingBusStops = toDictionary(arrivals.map(arrival => arrival.BusStop), busStop => busStop.BusStopCode);
+            const newBusStops = toDictionary(busStops.filter(busStop => !existingBusStops.has(busStop.BusStopCode)), busStop => busStop.BusStopCode);
             const arrivalsMap = toDictionary(arrivals, arrival => arrival.Id);
-            const newArrivals = await Promise.all(busStops.map(async (busStop) => {
+            const response = await Promise.all(busStops.map(async (busStop) => {
                 const result = await ltaDataMall.getBusArrivals(busStop.BusStopCode);
                 return result.map(item => ({
                     Id: `${busStop.BusStopCode}-${item.ServiceNo}`,
@@ -71,9 +73,12 @@ export const createLoadArrivalsAction: ActionCreator<ThunkAction<Promise<Arrival
             }));
 
             let empty:ArrivalData[] = []
+            const newArrivals = empty.concat(...response).filter(arrival => arrivalsMap.has(arrival.Id) || newBusStops.has(arrival.BusStop.BusStopCode));
+            console.log(`New arrivals ${newArrivals.length}: ${JSON.stringify(newArrivals)}`);
+
             const loadedAction:ArrivalsLoadedAction = {
                 type: ARRIVALS_LOADED,
-                arrivals: empty.concat(...newArrivals).filter(arrival => arrivalsMap.has(arrival.Id))
+                arrivals: newArrivals
             };        
             return dispatch(loadedAction);
       } catch (e) {
@@ -105,7 +110,10 @@ export function ArrivalsReducer(state:ArrivalsState=initialState, action:AnyActi
     if (arrivalsAction) {
         switch (arrivalsAction.type) {
             case ADD_BUS_STOP:
-                return { ...state, BusStops:[arrivalsAction.busStop].concat(state.BusStops) };
+                const busStopCodes = new Set(state.BusStops.map(busStop => busStop.BusStopCode));
+                const updatedBusStops = busStopCodes.has(arrivalsAction.busStop.BusStopCode) ? 
+                                            state.BusStops : [arrivalsAction.busStop].concat(state.BusStops);
+                return { ...state, BusStops:updatedBusStops };
             case LOAD_ARRIVALS:
                 return { ...state, IsLoading:true};
             case ARRIVALS_LOADED:

@@ -1,5 +1,6 @@
 import { Location, LocationServiceApi } from './LocationService';
 import { BusStop, BusArrival } from '../models/DataMall';
+import moment from 'moment';
 
 const apiKey='j+7DlElbSw2PA5AzgeAtZA==';
 const headers = {
@@ -26,7 +27,18 @@ export class LTADataMall {
         try {
             const path = `BusArrivalv2?BusStopCode=${busStopNumber}`;
             const response = await this.fetchFromDataMall<DataMallArrivalResponse>(path);
-            return response.Services;
+            const now = moment();
+            console.log(JSON.stringify(response.Services));
+            return response.Services.map(s => {
+                s.NextBus.EstimatedArrivalTime = moment(s.NextBus.EstimatedArrival);
+                s.NextBus2.EstimatedArrivalTime = moment(s.NextBus2.EstimatedArrival);
+                s.NextBus3.EstimatedArrivalTime = moment(s.NextBus3.EstimatedArrival);
+
+                s.NextBus.EstimatedArrivalInMins = s.NextBus.EstimatedArrivalTime.diff(now, "minutes");
+                s.NextBus2.EstimatedArrivalInMins = s.NextBus2.EstimatedArrivalTime.diff(now, "minutes");
+                s.NextBus3.EstimatedArrivalInMins = s.NextBus3.EstimatedArrivalTime.diff(now, "minutes");
+                return s;
+            });
         } catch (e) {
             console.log(`Failed to fetch bus arrival:${e}`);
             return [];

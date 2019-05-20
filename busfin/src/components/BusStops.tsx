@@ -27,14 +27,12 @@ interface BusStopsDisplayState {
     nearest: boolean
 }
 export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsActions, BusStopsDisplayState> {
-    private interAppService:InterApplicationService;
+    public interAppService:InterApplicationService = InterApplicationService.getInstance();
 
-    constructor(props:any, 
-        interAppService?:InterApplicationService) {
+    constructor(props:any) {
 
         super(props);
         this.state = { search: '', nearest: false};
-        this.interAppService = interAppService ? interAppService : InterApplicationService.getInstance();
         this.fetchBusStops = this.fetchBusStops.bind(this);
         this.handleSearchChange = this.handleSearchChange.bind(this);
         this.handleNearestChange = this.handleNearestChange.bind(this);
