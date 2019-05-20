@@ -63,6 +63,8 @@ export function BusStopsReducer(state:BusStopsState=initialState, action:AnyActi
                 return { ...state, IsLoading:true};
             case BUS_STOPS_LOADED:
                 return { ...state, BusStops:busStopsAction.busStops, IsLoading:false }
+            case LOAD_ERROR:
+                return { ...state, IsLoading:false}
         }        
     }
     return state;

@@ -1,8 +1,6 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
-import { Loading } from './Loading';
 import { BusStop } from '../models/DataMall';
-import { BusStopComponent } from './BusStop';
 import { connect, Provider } from 'react-redux';
 import { RootState } from '../redux/RootState';
 import { createLoadBusStopsAction } from '../redux/BusStopsState';
@@ -11,6 +9,14 @@ import { AnyAction } from 'redux';
 import { store } from '../redux/Store';
 import { InterApplicationService } from '../utils/InterApplicationService';
 import { BUS_STOP_ARRIVALS } from '../components/Topics';
+import { Stack } from 'office-ui-fabric-react/lib/Stack';
+import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
+import { TextField } from 'office-ui-fabric-react/lib/TextField';
+import { Button } from 'office-ui-fabric-react/lib/Button';
+import { Overlay } from 'office-ui-fabric-react/lib/Overlay';
+import { Spinner } from 'office-ui-fabric-react/lib/Spinner';
+import { BusStopsGrid } from './BusStopsGrid'; 
+import { mergeStyleSets, DefaultPalette } from 'office-ui-fabric-react/lib/Styling';
 
 interface BusStopsProps {
     BusStops: BusStop[]
@@ -26,6 +32,7 @@ interface BusStopsDisplayState {
     search: string,
     nearest: boolean
 }
+
 export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsActions, BusStopsDisplayState> {
     public interAppService:InterApplicationService = InterApplicationService.getInstance();
 
@@ -43,12 +50,12 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
         this.props.findBusStops(this.state.search);
     }
 
-    handleSearchChange(e:React.ChangeEvent<HTMLInputElement>) {
-        this.setState({ search: e.target.value });
+    handleSearchChange(ev:any, newValue?:string) {
+        this.setState({ search: newValue || '' });
     }
 
-    handleNearestChange(e:React.ChangeEvent<HTMLInputElement>) {
-        this.setState({ nearest: e.target.checked });
+    handleNearestChange(e:any, checked?:boolean) {
+        this.setState({ nearest: checked || false });
     }
 
     handleGetArrivals(busStop:BusStop) {
@@ -56,38 +63,41 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
     }
 
     render() {
+        const styles = mergeStyleSets({
+            root: {
+              background: DefaultPalette.themeTertiary,
+              padding: "20px 10px"
+            },
+      
+            item: {
+              color: DefaultPalette.white,
+              background: DefaultPalette.themePrimary,
+              padding: 5
+            },
+
+            spinner: {
+                width: 180,
+                height: 60,
+                background: DefaultPalette.whiteTranslucent40,
+              }
+        });
+
         return (
-            <div className="BusStopsPanel">
-                This is the bus stops panel
-                <div className="BusStopsPanel-header">
-                    <p>
-                        <label>
-                            <input type="checkbox" checked={this.state.nearest} onChange={this.handleNearestChange}></input>
-                            Nearest
-                        </label>
-                    </p>
-                    <p>
-                        <label>
-                            Bus stop code:
-                            <input value={this.state.search} onChange={this.handleSearchChange}></input>
-                        </label>
-                    </p>
-                    <p>
-                        <button onClick={this.fetchBusStops}>Load</button>
-                    </p>
-                </div>
-                {this.props.IsLoading ? 
-                    <Loading /> : 
-                    <ul>
-                        {
-                            this.props.BusStops.map(busStop => <BusStopComponent 
-                                key={busStop.BusStopCode} 
-                                busStop={busStop}
-                                getArrivals={this.handleGetArrivals} />)
-                        }
-                    </ul>}                
-            </div>
-            
+            <Stack>
+                <Stack className={styles.root}>
+                    <Checkbox label="Nearest" checked={this.state.nearest} onChange={this.handleNearestChange} />
+                    <TextField label="Bus stop code"  value={this.state.search} onChange={this.handleSearchChange} />
+                    <Button text="Find" onClick={this.fetchBusStops} />
+                </Stack>
+                <BusStopsGrid rowData={this.props.BusStops} getArrivals={this.handleGetArrivals} />                
+                {this.props.IsLoading && 
+                    <Overlay isDarkThemed={true}>
+                        <Stack verticalAlign="center" verticalFill={true} horizontalAlign="center">
+                            <Spinner className={styles.spinner} label="Finding bus stops ..." labelPosition="top" />
+                        </Stack>
+                    </Overlay>
+                }
+            </Stack>               
         );
     }
 }
