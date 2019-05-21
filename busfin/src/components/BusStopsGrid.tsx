@@ -20,15 +20,18 @@ export class BusStopsGrid extends React.Component<BusStopsGridProps, any, any>  
 
         this.columnDefs= [{
             headerName: "Bus Stop Code", 
-            field: "BusStopCode"
+            field: "BusStopCode",
+            width: 100
         }, 
         {
             headerName: "Description", 
-            field: "Description"
+            field: "Description",
+            width: 180
         },
         {
             headerName: "Arrival", 
-            field: "BusStopCode"
+            field: "BusStopCode",
+            cellRenderer: "iconButtonRenderer"
         }];
 
         this.cellRenderers = {
@@ -55,6 +58,7 @@ export class BusStopsGrid extends React.Component<BusStopsGridProps, any, any>  
             <AgGridReact 
                 columnDefs={this.columnDefs} 
                 rowData={this.props.rowData}
+                context={this.iconButtonContext}
                 frameworkComponents={this.cellRenderers}
             />
             </div>
