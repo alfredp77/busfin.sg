@@ -31,7 +31,7 @@ export class BusStopsGrid extends React.Component<BusStopsGridProps, any, any>  
             width: 180
         },
         {
-            headerName: "Arrival", 
+            headerName: "", 
             field: "BusStopCode",
             cellRenderer: "iconButtonRenderer"
         }];
@@ -43,6 +43,7 @@ export class BusStopsGrid extends React.Component<BusStopsGridProps, any, any>  
         this.arrivalClickHandler = this.arrivalClickHandler.bind(this);
         this.iconButtonContext = {
             iconName: 'Clock',
+            tooltipText: 'Show Arrivals',
             clickHandler: this.arrivalClickHandler
         }
     }
@@ -70,6 +71,7 @@ export class BusStopsGrid extends React.Component<BusStopsGridProps, any, any>  
 
 export interface IconButtonContext {
     iconName: string
+    tooltipText: string
     clickHandler: (value:any) => void
 }
 
@@ -89,10 +91,6 @@ export class IconButtonRenderer extends React.Component<any, any, any> {
 
     render() {
         console.log(`iconName:${this.buttonContext.iconName}`);
-        return (
-            <span>
-                <IconButton iconProps={{ iconName: this.buttonContext.iconName}} onClick={this.handleOnClick} />
-            </span>
-        )
+        return <IconButton iconProps={{ iconName: this.buttonContext.iconName}} title={this.buttonContext.tooltipText} onClick={this.handleOnClick} />
     }
 }
