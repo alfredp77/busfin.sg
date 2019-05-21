@@ -1,8 +1,8 @@
 import { Location, LocationServiceApi } from './LocationService';
 import { BusStop, BusArrival } from '../models/DataMall';
+import { apiKey } from './DataMallKey';
 import moment from 'moment';
 
-const apiKey='j+7DlElbSw2PA5AzgeAtZA==';
 const headers = {
     "AccountKey": apiKey,
     "accept":"application/json"
