@@ -4,6 +4,8 @@ import { IconButton } from 'office-ui-fabric-react/lib/Button';
 import { AgGridReact } from 'ag-grid-react';
 import 'ag-grid-community/dist/styles/ag-grid.css';
 import 'ag-grid-community/dist/styles/ag-theme-balham.css';
+import { initializeIcons } from '@uifabric/icons';
+initializeIcons();
 
 export interface BusStopsGridProps {
     rowData: BusStop[]
@@ -77,7 +79,7 @@ export class IconButtonRenderer extends React.Component<any, any, any> {
     constructor(props:any) {
         super(props);
 
-        this.buttonContext = props as IconButtonContext;
+        this.buttonContext = props.context as IconButtonContext;
         this.handleOnClick = this.handleOnClick.bind(this);
     }
 
@@ -86,6 +88,7 @@ export class IconButtonRenderer extends React.Component<any, any, any> {
     }
 
     render() {
+        console.log(`iconName:${this.buttonContext.iconName}`);
         return (
             <span>
                 <IconButton iconProps={{ iconName: this.buttonContext.iconName}} onClick={this.handleOnClick} />

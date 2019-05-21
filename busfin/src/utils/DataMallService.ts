@@ -19,6 +19,8 @@ interface DataMallArrivalResponse {
 }
 
 export class LTADataMall {
+    private cachedBusStops:BusStop[] = [];
+
     constructor(private locationService?:LocationServiceApi) {
         
     }
@@ -46,7 +48,13 @@ export class LTADataMall {
     }
 
     async searchBusStop(busStopNumber:string): Promise<BusStop[]> {
-        return await this.fetchPagedData('BusStops', data => {
+        const empty:BusStop[] = [];
+        let busStops = empty.concat(this.cachedBusStops);
+        if (busStops.length === 0) {
+            busStops = await this.fetchPagedData('BusStops', () => true);
+        }
+        this.cachedBusStops = busStops;
+        return busStops.filter( data => {
             if (busStopNumber === '' || (data.BusStopCode && data.BusStopCode.startsWith(busStopNumber)))
                 return true;
             return false;
