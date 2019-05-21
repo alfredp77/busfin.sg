@@ -58,12 +58,12 @@ export class BusStopsGrid extends React.Component<BusStopsGridProps, any, any>  
     render() {
         return (
             <div className='ag-theme-balham'>
-            <AgGridReact 
-                columnDefs={this.columnDefs} 
-                rowData={this.props.rowData}
-                context={this.iconButtonContext}
-                frameworkComponents={this.cellRenderers}
-            />
+                <AgGridReact 
+                    columnDefs={this.columnDefs} 
+                    rowData={this.props.rowData}
+                    context={this.iconButtonContext}
+                    frameworkComponents={this.cellRenderers}
+                />
             </div>
         )
     }

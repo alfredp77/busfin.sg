@@ -30,7 +30,6 @@ export class LTADataMall {
             const path = `BusArrivalv2?BusStopCode=${busStopNumber}`;
             const response = await this.fetchFromDataMall<DataMallArrivalResponse>(path);
             const now = moment();
-            console.log(JSON.stringify(response.Services));
             return response.Services.map(s => {
                 s.NextBus.EstimatedArrivalTime = moment(s.NextBus.EstimatedArrival);
                 s.NextBus2.EstimatedArrivalTime = moment(s.NextBus2.EstimatedArrival);
@@ -47,6 +46,9 @@ export class LTADataMall {
         }
     }
 
+    async loadAllBusStops(): Promise<BusStop[]> {
+        return await this.searchBusStop('');
+    }
     async searchBusStop(busStopNumber:string): Promise<BusStop[]> {
         const empty:BusStop[] = [];
         let busStops = empty.concat(this.cachedBusStops);

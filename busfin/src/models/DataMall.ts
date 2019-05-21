@@ -1,5 +1,25 @@
 import { Moment } from 'moment';
 
+export interface InterAppRequest {
+    Id: string
+}
+export interface GetBusStopsRequest extends InterAppRequest {
+    Nearest: boolean
+    BusStopCode: string
+}
+
+export interface InterAppResponse {
+    RequestId: string
+    Error: string
+}
+export interface GetBusStopsResponse extends InterAppResponse {
+    BusStops: BusStop[]
+}
+
+export interface InterAppRequestHandler {
+    initialize():void
+}
+
 export interface BusStop {
     BusStopCode: string
     RoadName: string
