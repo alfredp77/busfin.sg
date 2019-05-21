@@ -10,12 +10,12 @@
         "uuid": "Bus app using react-redux-openfin POC",
         "autoShow": true,
         "contextMenu": true,
-        "defaultWidth": 480,
-        "maxWidth": 480,
-        "minWidth": 480,
-        "defaultHeight": 120,
-        "maxHeight": 120,
-        "minHeight": 120,
+        "defaultWidth": 300,
+        "maxWidth": 300,
+        "minWidth": 300,
+        "defaultHeight": 200,
+        "maxHeight": 200,
+        "minHeight": 200,
         "frame": true,
         "defaultCentered": true,
         "resizable": false
@@ -26,7 +26,7 @@
     },
     "shortcut": {
         "company": "Codingcat",
-        "description": "Bus app using react-redux-openfin POC",
+        "description": "Busfin",
         "name": "Busfin"
     }
 }

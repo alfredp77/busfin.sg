@@ -5,10 +5,15 @@ import { GET_BUS_STOPS_REQUEST, GET_BUS_STOPS_RESPONSE } from './Topics';
 import { GetBusStopsRequest, GetBusStopsResponse, InterAppRequestHandler } from '../models/DataMall';
 import { LTADataMall, ltaDataMall } from '../utils/DataMallService';
 import { Stack } from 'office-ui-fabric-react/lib/Stack';
-import { IconButton } from 'office-ui-fabric-react/lib/Button';
+import { Text } from 'office-ui-fabric-react/lib/Text';
+import { IconButton, CompoundButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
+import { mergeStyleSets, DefaultPalette, ColorClassNames } from 'office-ui-fabric-react/lib/Styling';
+import { initializeIcons } from '@uifabric/icons';
+import { Icon } from 'office-ui-fabric-react/lib/Icon';
+initializeIcons();
 
 export class Launcher extends React.Component {
-    public requestHandlers:InterAppRequestHandler[] = []
+    public requestHandlers:InterAppRequestHandler[] = [];
     public getBusStopsHandler:GetBusStopsRequestHandler;
 
     constructor(props:any) {
@@ -59,20 +64,32 @@ export class Launcher extends React.Component {
     }
 
     render() {
+      const styles = mergeStyleSets({
+            root: {
+              padding: "5px 30px"
+            },            
+      });
+      
       return (
-        <Stack>
-          <IconButton iconProps={{ iconName: 'BusSolid'}} onClick={this.handleBusStopsClick}/>
+        <Stack className={styles.root} gap="15">
+          <MenuButton onClick={this.handleBusStopsClick} iconName='DOM' text='Bus Stops' />
+          <MenuButton iconName='Bus' text='Bus Services' />
+          <MenuButton onClick={this.handleArrivalsClick} iconName='Clock' text='Arrivals' />
         </Stack>
-        // <div className="hello">
-        //   <div className="LauncherPanel">
-        //     <button className="LauncherButton" onClick={this.handleBusStopsClick}>Bus Stops</button>
-        //     <button className="LauncherButton">Bus Services</button>
-        //     <button className="LauncherButton" onClick={this.handleArrivalsClick}>Arrivals</button>
-        //   </div>
-        // </div>
       );
     }
     
+}
+
+export const MenuButton = (props:any) =>  {
+  return (
+    <DefaultButton onClick={props.onClick}>
+        <Stack horizontal gap="10">
+          <Icon iconName={props.iconName} />
+          <Text>{props.text}</Text>
+        </Stack>
+    </DefaultButton>
+  )
 }
 
 export class GetBusStopsRequestHandler implements InterAppRequestHandler {
