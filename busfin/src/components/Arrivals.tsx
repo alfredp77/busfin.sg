@@ -7,8 +7,8 @@ import { AnyAction } from 'redux';
 import { createRemoveArrivalAction, createLoadArrivalsAction, createAddBusStopAction } from '../redux/ArrivalsState';
 import { connect, Provider } from 'react-redux';
 import { store as realStore } from '../redux/Store';
-import { InterApplicationService } from '../utils/InterApplicationService';
-import { BUS_STOP_ARRIVALS } from './Topics';
+import { InterApplicationService } from '../interapp/InterApplicationService';
+import { BUS_STOP_ARRIVALS } from '../interapp/Topics';
 
 interface ArrivalsProps {
     busStops: BusStop[]

@@ -3,6 +3,8 @@ import { AnyAction, ActionCreator, Dispatch } from 'redux';
 import { ltaDataMall } from '../utils/DataMallService';
 import { ThunkAction } from 'redux-thunk';
 import { LoadErrorAction, LOAD_ERROR } from './ErrorAction';
+import { NoAction, noAction } from './NoAction';
+import { GetBusStopsRequestSender, GetBusStopsResponse } from '../interapp/BusStopsHandlers';
 
 export interface BusStopsState {
     BusStops: BusStop[]
@@ -29,7 +31,9 @@ export interface BusStopsLoadedAction extends AnyAction {
     busStops: BusStop[];
 }
 
-export type BusStopsAction = LoadBusStopsAction | BusStopsLoadedAction | LoadErrorAction;
+export type BusStopsAction = LoadBusStopsAction | BusStopsLoadedAction | LoadErrorAction | NoAction;
+
+const busStopsRequestSender:GetBusStopsRequestSender = new GetBusStopsRequestSender();
 
 export const createLoadBusStopsAction: ActionCreator<ThunkAction<Promise<BusStopsAction>, void, string, LoadBusStopsAction>> = (busStopNumber:string) => {
   return async (dispatch: Dispatch) => {
@@ -39,12 +43,24 @@ export const createLoadBusStopsAction: ActionCreator<ThunkAction<Promise<BusStop
         };
         dispatch(loadingAction);
 
-        const busStops = await ltaDataMall.searchBusStop(busStopNumber);
-        const loadedAction:BusStopsLoadedAction = {
-            type: BUS_STOPS_LOADED,
-            busStops: busStops
-        };        
-        return dispatch(loadedAction);
+        await busStopsRequestSender.getBusStops(false, busStopNumber, (response:GetBusStopsResponse) => {
+            if (response.Error) {
+                const errorAction:LoadErrorAction  ={
+                    type: LOAD_ERROR,
+                    message: response.Error
+                }
+                dispatch(errorAction);
+            } 
+            else {
+                const loadedAction:BusStopsLoadedAction = {
+                    type: BUS_STOPS_LOADED,
+                    busStops: response.BusStops
+                };
+                dispatch(loadedAction);
+            }
+        });
+
+        return dispatch(noAction);
     } catch (e) {
         const errorAction:LoadErrorAction = {
             type: LOAD_ERROR,

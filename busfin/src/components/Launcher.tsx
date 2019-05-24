@@ -1,18 +1,23 @@
 import * as React from 'react';
 import { LayoutService } from '../utils/LayoutService';
-import { InterApplicationService } from '../utils/InterApplicationService';
-import { GET_BUS_STOPS_REQUEST, GET_BUS_STOPS_RESPONSE } from './Topics';
-import { GetBusStopsRequest, GetBusStopsResponse, InterAppRequestHandler } from '../models/DataMall';
-import { LTADataMall, ltaDataMall } from '../utils/DataMallService';
+import { InterAppRequestHandler } from '../interapp/InterApplicationService';
+import { GetBusStopsRequestHandler } from '../interapp/BusStopsHandlers';
 import { Stack } from 'office-ui-fabric-react/lib/Stack';
 import { Text } from 'office-ui-fabric-react/lib/Text';
-import { IconButton, CompoundButton, DefaultButton } from 'office-ui-fabric-react/lib/Button';
-import { mergeStyleSets, DefaultPalette, ColorClassNames } from 'office-ui-fabric-react/lib/Styling';
+import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
+import { mergeStyleSets } from 'office-ui-fabric-react/lib/Styling';
 import { initializeIcons } from '@uifabric/icons';
 import { Icon } from 'office-ui-fabric-react/lib/Icon';
+import { Spinner } from 'office-ui-fabric-react/lib/Spinner';
 initializeIcons();
 
-export class Launcher extends React.Component {
+interface LauncherState {
+  busStopsLoading: boolean
+  busStopsLoaded: boolean
+  busStopsLoadError: string
+}
+
+export class Launcher extends React.Component<any, LauncherState, any> {
     public requestHandlers:InterAppRequestHandler[] = [];
     public getBusStopsHandler:GetBusStopsRequestHandler;
 
@@ -72,9 +77,12 @@ export class Launcher extends React.Component {
       
       return (
         <Stack className={styles.root} gap="15">
-          <MenuButton onClick={this.handleBusStopsClick} iconName='DOM' text='Bus Stops' />
-          <MenuButton iconName='Bus' text='Bus Services' />
-          <MenuButton onClick={this.handleArrivalsClick} iconName='Clock' text='Arrivals' />
+          <MenuButton text='Bus Stops' onClick={this.handleBusStopsClick} iconName='DOM' 
+              loading={this.state.busStopsLoading}
+              loadingText="Loading bus stops ..."
+              disabled={!this.state.busStopsLoaded} />
+          <MenuButton text='Bus Services' iconName='Bus'  />
+          <MenuButton text='Arrivals' onClick={this.handleArrivalsClick} iconName='Clock' />
         </Stack>
       );
     }
@@ -83,51 +91,12 @@ export class Launcher extends React.Component {
 
 export const MenuButton = (props:any) =>  {
   return (
-    <DefaultButton onClick={props.onClick}>
+    <DefaultButton onClick={props.onClick} disabled={props.disabled}>
         <Stack horizontal gap="10">
-          <Icon iconName={props.iconName} />
-          <Text>{props.text}</Text>
+            {props.loading && <Spinner label={props.loadingText || "Loading ..."} labelPosition="right"/>}
+            {!props.loading && <Icon iconName={props.iconName} />}
+            {!props.loading && <Text>{props.text}</Text>}
         </Stack>
     </DefaultButton>
   )
-}
-
-export class GetBusStopsRequestHandler implements InterAppRequestHandler {
-    public interAppService = InterApplicationService.getInstance();
-    public ltaDataMallService = ltaDataMall;
-
-    constructor(
-      private callbackOnInitialize:() => void,
-      private callbackOnReady:(errorMsg?:string) => void) {
-      this.handleGetBusStops = this.handleGetBusStops.bind(this);
-    }
-
-    async handleGetBusStops(request:GetBusStopsRequest) {
-      let response:GetBusStopsResponse = {
-        RequestId: request.Id,
-        Error: '',
-        BusStops: []
-      }
-
-      try {
-        response.BusStops = await this.ltaDataMallService.searchBusStop(request.BusStopCode);
-        this.interAppService.publish(GET_BUS_STOPS_RESPONSE, response);
-      } catch (e) {
-        response.Error = `Failed to fetch bus stops. Error: ${e}`;
-        this.interAppService.publish(GET_BUS_STOPS_RESPONSE, response)
-      }
-    }
-
-    async initialize() {
-      this.callbackOnInitialize();
-
-      this.interAppService.subscribe(GET_BUS_STOPS_REQUEST, this.handleGetBusStops)
-
-      try {
-        await this.ltaDataMallService.loadAllBusStops();
-        this.callbackOnReady();
-      } catch (e) {
-        this.callbackOnReady(`Failed to fetch bus stops. Error: ${e}`);
-      }
-    }
 }

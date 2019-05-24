@@ -2,6 +2,7 @@ import { Location, LocationServiceApi } from './LocationService';
 import { BusStop, BusArrival } from '../models/DataMall';
 import { apiKey } from './DataMallKey';
 import moment from 'moment';
+import { delay } from 'q';
 
 const headers = {
     "AccountKey": apiKey,
@@ -79,7 +80,7 @@ export class LTADataMall {
     //     });
     // }
 
-    private async fetchPagedData<T>(name:string, filter: (arg:T) => boolean): Promise<T[]> {
+    protected async fetchPagedData<T>(name:string, filter: (arg:T) => boolean): Promise<T[]> {
         const skipCount = 500;
         let currentSkip = 0;
         let lastRetrievedCount = 0;
@@ -98,7 +99,7 @@ export class LTADataMall {
         return result;
     }
 
-    private async fetchFromDataMall<T>(path:string): Promise<T>{
+    protected async fetchFromDataMall<T>(path:string): Promise<T>{
         let endpoint = `https://cors-anywhere.herokuapp.com/${baseUrl}${path}`;
         let response = await fetch(endpoint, {
             method: 'GET',
@@ -112,4 +113,35 @@ export class LTADataMall {
     }
 }
 
-export const ltaDataMall = new LTADataMall();
+class FakeLTADataMall extends LTADataMall {
+    constructor(locationService?:LocationServiceApi) {
+        super(locationService);
+
+    }
+
+    protected async fetchPagedData<T>(name:string, filter: (arg:T) => boolean): Promise<T[]> {
+        if (name === 'BusStops') {
+            const busStop1:unknown = {
+                BusStopCode: '67379',
+                RoadName: 'Anchorvale Road',
+                Description: 'Opp Blk 313 CP',
+                Latitude: 1,
+                Longitude: 1
+            };
+
+            const busStop2:unknown = {
+                BusStopCode: '67381',
+                RoadName: 'Sengkang East Way',
+                Description: 'Blk 317B',
+                Latitude: 1,
+                Longitude: 1
+            };
+
+            return delay(Promise.resolve([busStop1, busStop2] as T[]), 3000);
+        } else {
+            return Promise.resolve([]);
+        }
+    }    
+}
+
+export const ltaDataMall = new FakeLTADataMall(); //new LTADataMall();

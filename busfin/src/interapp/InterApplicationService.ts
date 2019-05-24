@@ -1,3 +1,16 @@
+export interface InterAppRequest {
+    Id: string
+}
+
+export interface InterAppResponse {
+    RequestId: string
+    Error: string
+}
+
+export interface InterAppRequestHandler {
+    initialize():void
+}
+
 export class InterApplicationService {
     private static instance: InterApplicationService;
 
@@ -12,15 +25,15 @@ export class InterApplicationService {
         return InterApplicationService.instance;
     }
 
-    publish<T>(topic:string, message:T) {
+    async publish<T>(topic:string, message:T) {
         console.log(`Publishing message: ${JSON.stringify(message)}`);
         //@ts-ignore        
-        fin.desktop.InterApplicationBus.publish(topic, message);
+        await fin.desktop.InterApplicationBus.publish(topic, message);
     }
 
-    subscribe<T>(topic:string, callback: (message:T) => void) {
+    async subscribe<T>(topic:string, callback: (message:T) => void) {
         //@ts-ignore
-        fin.desktop.InterApplicationBus.subscribe("*",topic,
+        await fin.desktop.InterApplicationBus.subscribe("*",topic,
         function (incoming:any, uuid:any) {
             console.log(`There is incoming message: ${JSON.stringify(incoming)}`);
             const message = incoming as T;
@@ -29,5 +42,10 @@ export class InterApplicationService {
                 callback(message);
             }
         });
+    }
+
+    async unsubscribe(topic:string) {
+        //@ts-ignore
+        await fin.desktop.InterApplicationBus.unsubscribe("*",topic)
     }
 }
