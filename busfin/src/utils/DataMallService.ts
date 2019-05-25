@@ -1,5 +1,5 @@
 import { Location, LocationServiceApi } from './LocationService';
-import { BusStop, BusArrival } from '../models/DataMall';
+import { BusStop, BusArrival, NextBusInfo } from '../models/DataMall';
 import { apiKey } from './DataMallKey';
 import moment from 'moment';
 import { delay } from 'q';
@@ -142,6 +142,63 @@ class FakeLTADataMall extends LTADataMall {
             return Promise.resolve([]);
         }
     }    
+
+    protected async fetchFromDataMall<T>(path:string): Promise<T>{
+        if (path.indexOf('BusArrival') >= 0) {
+            const busStop = path.split('=')[1];
+
+            const busInfo1:NextBusInfo = {
+                OriginCode: '67000',
+                DestinationCode: '67000',
+                EstimatedArrival: moment().add(5, "minutes").format(),
+                Latitude: 1,
+                Longitude: 1,
+                VisitNumber: 1,
+                Load: "A",
+                Feature: "WAB",
+                Type: "X"
+            }
+            const busInfo2:NextBusInfo = {
+                OriginCode: '67000',
+                DestinationCode: '67000',
+                EstimatedArrival: moment().add(16, "minutes").format(),
+                Latitude: 1,
+                Longitude: 1,
+                VisitNumber: 1,
+                Load: "A",
+                Feature: "WAB",
+                Type: "X"
+            }
+            const busInfo3:NextBusInfo = {
+                OriginCode: '67000',
+                DestinationCode: '67000',
+                EstimatedArrival: moment().add(19, "minutes").format(),
+                Latitude: 1,
+                Longitude: 1,
+                VisitNumber: 1,
+                Load: "A",
+                Feature: "WAB",
+                Type: "X"
+            }
+
+            const arrival:BusArrival = {
+                ServiceNo: busStop,
+                Operator: 'TEST',
+                NextBus: busInfo1,
+                NextBus2: busInfo2,
+                NextBus3: busInfo3
+            }
+
+            const response:unknown = {
+                BusStopCode: busStop,
+                Services: [arrival]
+            }
+
+            return delay(Promise.resolve(response as T), 1000);
+        } else {
+            return Promise.resolve(null as unknown as T);
+        }
+    }
 }
 
-export const ltaDataMall = new FakeLTADataMall(); //new LTADataMall();
+export const ltaDataMall = new LTADataMall();

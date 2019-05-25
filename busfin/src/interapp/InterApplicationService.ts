@@ -1,3 +1,4 @@
+
 export interface InterAppRequest {
     Id: string
 }
@@ -13,7 +14,8 @@ export interface InterAppRequestHandler {
 
 export class InterApplicationService {
     private static instance: InterApplicationService;
-
+    
+    private subscriptions = new Map<string, any>();
     private constructor() {
 
     }
@@ -32,20 +34,28 @@ export class InterApplicationService {
     }
 
     async subscribe<T>(topic:string, callback: (message:T) => void) {
-        //@ts-ignore
-        await fin.desktop.InterApplicationBus.subscribe("*",topic,
-        function (incoming:any, uuid:any) {
+        if (this.subscriptions.has(topic)) {
+            await this.unsubscribe(topic);
+        }
+
+        const subscriptionFunction = function (incoming:any, uuid:any) {
             console.log(`There is incoming message: ${JSON.stringify(incoming)}`);
             const message = incoming as T;
             if (message) {
                 console.log("Calling the callback")
                 callback(message);
             }
-        });
+        }
+        //@ts-ignore
+        await fin.desktop.InterApplicationBus.subscribe("*",topic, subscriptionFunction);
+        this.subscriptions.set(topic, subscriptionFunction);
     }
 
     async unsubscribe(topic:string) {
-        //@ts-ignore
-        await fin.desktop.InterApplicationBus.unsubscribe("*",topic)
+        if (this.subscriptions.has(topic)) {
+            const subscriptionFunction = this.subscriptions.get(topic);
+            //@ts-ignore
+            await fin.desktop.InterApplicationBus.unsubscribe("*",topic, subscriptionFunction);
+        }
     }
 }

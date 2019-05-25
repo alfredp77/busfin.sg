@@ -2,6 +2,7 @@ import * as React from 'react';
 import { LayoutService } from '../utils/LayoutService';
 import { InterAppRequestHandler } from '../interapp/InterApplicationService';
 import { GetBusStopsRequestHandler } from '../interapp/BusStopsHandlers';
+import { GetBusStopArrivalsRequestHandler } from '../interapp/ArrivalsHandlers';
 import { Stack } from 'office-ui-fabric-react/lib/Stack';
 import { Text } from 'office-ui-fabric-react/lib/Text';
 import { DefaultButton } from 'office-ui-fabric-react/lib/Button';
@@ -15,11 +16,18 @@ interface LauncherState {
   busStopsLoading: boolean
   busStopsLoaded: boolean
   busStopsLoadError: string
+
+  arrivalsLoading: boolean,
+  arrivalsLoaded: boolean,
+  arrivalsLoadError: string
 }
 
 export class Launcher extends React.Component<any, LauncherState, any> {
     public requestHandlers:InterAppRequestHandler[] = [];
     public getBusStopsHandler:GetBusStopsRequestHandler;
+    public arrivalsRequestHandler:GetBusStopArrivalsRequestHandler;
+    private busStopsWindow:any;
+    private arrivalsWindow:any;
 
     constructor(props:any) {
       super(props);
@@ -30,12 +38,24 @@ export class Launcher extends React.Component<any, LauncherState, any> {
       this.state = { 
         busStopsLoading:false,
         busStopsLoaded:false,
-        busStopsLoadError: ''
+        busStopsLoadError: '',
+
+        arrivalsLoading:false,
+        arrivalsLoaded:false,
+        arrivalsLoadError:''
       }
+
       this.getBusStopsHandlerInitializing = this.getBusStopsHandlerInitializing.bind(this);
       this.getBusStopsHandlerInitialized = this.getBusStopsHandlerInitialized.bind(this);
       this.getBusStopsHandler = new GetBusStopsRequestHandler(this.getBusStopsHandlerInitializing, this.getBusStopsHandlerInitialized);
       this.requestHandlers.push(this.getBusStopsHandler);
+
+      this.getBusStopArrivalsHandlerInitializing = this.getBusStopArrivalsHandlerInitializing.bind(this);
+      this.getBusStopArrivalsHandlerInitialized = this.getBusStopArrivalsHandlerInitialized.bind(this);
+      this.arrivalsRequestHandler = new GetBusStopArrivalsRequestHandler(this.getBusStopArrivalsHandlerInitializing, 
+                                        this.getBusStopArrivalsHandlerInitialized,
+                                        this.handleArrivalsClick);
+      this.requestHandlers.push(this.arrivalsRequestHandler);
     }
 
     componentDidMount() {
@@ -57,11 +77,37 @@ export class Launcher extends React.Component<any, LauncherState, any> {
     }
 
     async handleBusStopsClick() {
-      await this.showChildWindow('Bus Stops', 'busstops');
+      if (this.busStopsWindow) {
+        await this.busStopsWindow.show();
+      } else {
+        this.busStopsWindow = await this.showChildWindow('Bus Stops', 'busstops');
+        this.busStopsWindow.addListener("closed", () => {
+          this.busStopsWindow = null;
+        });
+      }
     }
 
+
+    getBusStopArrivalsHandlerInitializing() {
+      this.setState({arrivalsLoading:true});
+    }
+   
+    getBusStopArrivalsHandlerInitialized(errorMsg?:string) {
+      if (errorMsg) {
+        this.setState({arrivalsLoading:false, arrivalsLoaded:false, arrivalsLoadError:errorMsg});
+      } else {
+        this.setState({arrivalsLoading:false, arrivalsLoaded:true, arrivalsLoadError:''});
+      }
+    }
     async handleArrivalsClick() {
-      await this.showChildWindow('Arrivals','arrivals');
+      if (this.arrivalsWindow) {
+        await this.arrivalsWindow.show();
+      } else {
+        this.arrivalsWindow = await this.showChildWindow('Arrivals', 'arrivals');
+        this.arrivalsWindow.addListener("closed", () => {
+          this.arrivalsWindow = null;
+        });
+      }
     }
 
     async showChildWindow(title:string, page:string) {
@@ -82,7 +128,11 @@ export class Launcher extends React.Component<any, LauncherState, any> {
               loadingText="Loading bus stops ..."
               disabled={!this.state.busStopsLoaded} />
           <MenuButton text='Bus Services' iconName='Bus'  />
-          <MenuButton text='Arrivals' onClick={this.handleArrivalsClick} iconName='Clock' />
+          <MenuButton text='Arrivals' onClick={this.handleArrivalsClick} iconName='Clock' 
+            loading={this.state.arrivalsLoading}
+            loadingText="Loading arrivals ..."
+            disabled={!this.state.arrivalsLoaded} />
+          />
         </Stack>
       );
     }

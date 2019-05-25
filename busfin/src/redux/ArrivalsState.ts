@@ -4,6 +4,8 @@ import { ltaDataMall } from '../utils/DataMallService';
 import { ThunkAction } from 'redux-thunk';
 import { LoadErrorAction, LOAD_ERROR } from './ErrorAction';
 import { removeFromArray, toDictionary } from '../utils/Collections';
+import { GetBusStopArrivalsRequestSender, ArrivalParams, GetBusStopArrivalsResponse } from '../interapp/ArrivalsHandlers';
+import { NoAction, noAction } from './NoAction';
 
 
 export interface ArrivalsState {
@@ -49,7 +51,9 @@ export interface RemoveArrivalAction extends AnyAction {
     arrival: ArrivalData;
 }
 
-export type ArrivalsAction = AddBusStopAction | LoadArrivalsAction | ArrivalsLoadedAction | RemoveArrivalAction | LoadErrorAction;
+export type ArrivalsAction = AddBusStopAction | LoadArrivalsAction | ArrivalsLoadedAction | RemoveArrivalAction | LoadErrorAction | NoAction;
+
+const arrivalsRequestSender:GetBusStopArrivalsRequestSender = new GetBusStopArrivalsRequestSender();
 
 export const createLoadArrivalsAction: ActionCreator<ThunkAction<Promise<ArrivalsAction>, void, string, LoadArrivalsAction>>
 = (busStops:BusStop[], arrivals:ArrivalData[]) => {
@@ -60,27 +64,28 @@ export const createLoadArrivalsAction: ActionCreator<ThunkAction<Promise<Arrival
             };
             dispatch(loadingAction);
             
-            const existingBusStops = toDictionary(arrivals.map(arrival => arrival.BusStop), busStop => busStop.BusStopCode);
-            const newBusStops = toDictionary(busStops.filter(busStop => !existingBusStops.has(busStop.BusStopCode)), busStop => busStop.BusStopCode);
-            const arrivalsMap = toDictionary(arrivals, arrival => arrival.Id);
-            const response = await Promise.all(busStops.map(async (busStop) => {
-                const result = await ltaDataMall.getBusArrivals(busStop.BusStopCode);
-                return result.map(item => ({
-                    Id: `${busStop.BusStopCode}-${item.ServiceNo}`,
-                    BusStop: busStop,
-                    Arrival: item
-                })) as ArrivalData[];
-            }));
-
-            let empty:ArrivalData[] = []
-            const newArrivals = empty.concat(...response).filter(arrival => arrivalsMap.has(arrival.Id) || newBusStops.has(arrival.BusStop.BusStopCode));
-            console.log(`New arrivals ${newArrivals.length}: ${JSON.stringify(newArrivals)}`);
-
-            const loadedAction:ArrivalsLoadedAction = {
-                type: ARRIVALS_LOADED,
-                arrivals: newArrivals
-            };        
-            return dispatch(loadedAction);
+            const params:ArrivalParams = {
+                BusStops: busStops,
+                Arrivals: arrivals
+            }
+            await arrivalsRequestSender.getArrivals(params, (response:GetBusStopArrivalsResponse) => {
+                if (response.Error) {
+                    const errorAction:LoadErrorAction  ={
+                        type: LOAD_ERROR,
+                        message: response.Error
+                    }
+                    dispatch(errorAction);
+                } 
+                else {
+                    const loadedAction:ArrivalsLoadedAction = {
+                        type: ARRIVALS_LOADED,
+                        arrivals: response.Arrivals
+                    };
+                    dispatch(loadedAction);
+                }
+            });
+    
+            return dispatch(noAction);            
       } catch (e) {
           const errorAction:LoadErrorAction = {
               type: LOAD_ERROR,
