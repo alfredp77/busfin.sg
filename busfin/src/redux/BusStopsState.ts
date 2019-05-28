@@ -43,24 +43,20 @@ export const createLoadBusStopsAction: ActionCreator<ThunkAction<Promise<BusStop
         };
         dispatch(loadingAction);
 
-        await busStopsRequestSender.getBusStops(false, busStopNumber, (response:GetBusStopsResponse) => {
-            if (response.Error) {
-                const errorAction:LoadErrorAction  ={
-                    type: LOAD_ERROR,
-                    message: response.Error
-                }
-                dispatch(errorAction);
-            } 
-            else {
-                const loadedAction:BusStopsLoadedAction = {
-                    type: BUS_STOPS_LOADED,
-                    busStops: response.BusStops
-                };
-                dispatch(loadedAction);
+        const response = await busStopsRequestSender.getBusStops2(false, busStopNumber);
+        if (response.Error) {
+            const errorAction:LoadErrorAction  ={
+                type: LOAD_ERROR,
+                message: response.Error
             }
-        });
-
-        return dispatch(noAction);
+            return dispatch(errorAction);
+        } 
+        
+        const loadedAction:BusStopsLoadedAction = {
+            type: BUS_STOPS_LOADED,
+            busStops: response.BusStops
+        };
+        return dispatch(loadedAction);
     } catch (e) {
         const errorAction:LoadErrorAction = {
             type: LOAD_ERROR,

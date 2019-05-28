@@ -83,4 +83,28 @@ export class GetBusStopsRequestSender {
     })
     this.interAppService.publish(GET_BUS_STOPS_REQUEST, request);    
   }  
+
+  getBusStops2(nearest:boolean, busStopCode:string):Promise<GetBusStopsResponse> {
+    const request:GetBusStopsRequest = {
+      Id: moment().format('x'), 
+      Nearest: nearest,
+      BusStopCode: busStopCode
+    }
+
+    const responseTopic = createResponseTopic(request);
+    return new Promise((response, reject) => {
+      this.interAppService.subscribe(responseTopic, (result:GetBusStopsResponse) => {
+        try {
+          response(result);
+        } catch (e) {
+          reject(e);
+        }
+        finally {
+          this.interAppService.unsubscribe(responseTopic);
+        }
+      })
+      this.interAppService.publish(GET_BUS_STOPS_REQUEST, request);
+    });
+  }
 }
+
