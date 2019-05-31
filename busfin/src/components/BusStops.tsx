@@ -2,13 +2,9 @@ import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { BusStop } from '../models/DataMall';
 import { connect, Provider } from 'react-redux';
-import { RootState } from '../redux/RootState';
-import { createLoadBusStopsAction } from '../redux/BusStopsState';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
-import { store } from '../redux/Store';
+import { RootState } from '../redux-saga/RootState';
+import { store, dispatchAction } from '../redux-saga/Store';
 import { InterApplicationService } from '../interapp/InterApplicationService';
-import { BUS_STOP_ARRIVALS } from '../interapp/Topics';
 import { Stack } from 'office-ui-fabric-react/lib/Stack';
 import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
@@ -17,6 +13,8 @@ import { Overlay } from 'office-ui-fabric-react/lib/Overlay';
 import { Spinner } from 'office-ui-fabric-react/lib/Spinner';
 import { BusStopsGrid } from './BusStopsGrid'; 
 import { mergeStyleSets, DefaultPalette } from 'office-ui-fabric-react/lib/Styling';
+import { BusStopsActionEnums } from '../redux-saga/BusStopsState';
+import { ArrivalsActionEnums } from '../redux-saga/ArrivalsState';
 
 interface BusStopsProps {
     BusStops: BusStop[]
@@ -59,7 +57,10 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
     }
 
     handleGetArrivals(busStop:BusStop) {
-        this.interAppService.publish(BUS_STOP_ARRIVALS, busStop);
+        dispatchAction({
+            type: ArrivalsActionEnums.AddBusStop,
+            busStop: busStop
+        });
     }
 
     render() {
@@ -110,10 +111,16 @@ export const mapStateToProps = (rootState: RootState) => {
     }
 }
   
-export const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+export const mapDispatchToProps = () => {
     return {
-      startLoading: () => dispatch(createLoadBusStopsAction('')),
-      findBusStops: (busStopNumber: string) => dispatch(createLoadBusStopsAction(busStopNumber)),
+      startLoading: () => dispatchAction({
+        type: BusStopsActionEnums.StartLoading,
+        busStop: ''
+      }),
+      findBusStops: (busStopNumber: string) => dispatchAction({
+        type: BusStopsActionEnums.StartLoading,
+        busStop: busStopNumber
+      }),
     };
 };
 

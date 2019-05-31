@@ -111,7 +111,7 @@ export class Launcher extends React.Component<any, LauncherState, any> {
     }
 
     async showChildWindow(title:string, page:string) {
-      await LayoutService.getInstance().showChildWindow(title,`http://localhost:7777/${page}.html`, 400, 600, true);
+      return await LayoutService.getInstance().showChildWindow(title,`http://localhost:7777/${page}.html`, 400, 600, true);
     }
 
     render() {

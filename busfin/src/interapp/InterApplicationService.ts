@@ -59,3 +59,5 @@ export class InterApplicationService {
         }
     }
 }
+
+export const interAppService = InterApplicationService.getInstance();

@@ -1,14 +1,13 @@
 import * as React from 'react';
 import * as ReactDOM from 'react-dom';
 import { ArrivalData, BusStop } from '../models/DataMall';
-import { RootState } from '../redux/RootState';
-import { ThunkDispatch } from 'redux-thunk';
-import { AnyAction } from 'redux';
-import { createRemoveArrivalAction, createLoadArrivalsAction, createAddBusStopAction } from '../redux/ArrivalsState';
+import { RootState } from '../redux-saga/RootState';
+import { Dispatch } from 'redux';
 import { connect, Provider } from 'react-redux';
-import { store as realStore } from '../redux/Store';
 import { InterApplicationService } from '../interapp/InterApplicationService';
-import { BUS_STOP_ARRIVALS } from '../interapp/Topics';
+import { GET_BUS_STOP_ARRIVALS_RESPONSE, GetBusStopArrivalsResponse } from '../interapp/ArrivalsHandlers';
+import { store, dispatchAction } from '../redux-saga/Store';
+import { ArrivalsActionEnums } from '../redux-saga/ArrivalsState';
 
 interface ArrivalsProps {
     busStops: BusStop[]
@@ -57,10 +56,17 @@ export const mapStateToProps = (rootState: RootState) => {
     }
 }
 
-export const mapDispatchToProps = (dispatch: ThunkDispatch<any, any, AnyAction>) => {
+export const mapDispatchToProps = (dispatch: Dispatch) => {
     return {
-        removeArrival: (arrival:ArrivalData) => dispatch(createRemoveArrivalAction(arrival)),
-        loadArrivals: (busStops:BusStop[], arrivals:ArrivalData[]) => dispatch(createLoadArrivalsAction(busStops, arrivals))
+        removeArrival: (arrival:ArrivalData) => dispatchAction({
+            type: ArrivalsActionEnums.RemoveArrival,
+            busStop: arrival.BusStop}),
+
+        loadArrivals: (busStops:BusStop[], arrivals:ArrivalData[]) => dispatch({
+            type: ArrivalsActionEnums.StartLoading,
+            busStops: busStops,
+            arrivals: arrivals
+        })
     }
 }
 
@@ -70,7 +76,6 @@ export const ArrivalsContainer = connect(
 ) (ArrivalsDisplay);
 
 export class ArrivalsComponent extends React.Component {
-    public store = realStore;
     public interAppService = InterApplicationService.getInstance();
 
     constructor(props:any) {
@@ -81,26 +86,25 @@ export class ArrivalsComponent extends React.Component {
     
     componentDidMount() {
         // subscribe to notifications
-        this.interAppService.subscribe(BUS_STOP_ARRIVALS, this.handleIncomingMessage);
+        this.interAppService.subscribe(GET_BUS_STOP_ARRIVALS_RESPONSE, this.handleIncomingMessage);
 
         // schedule periodic reload of arrivals
     }
 
-    handleIncomingMessage(busStop:BusStop) {
-        const dispatch = this.store.dispatch as ThunkDispatch<any, any, AnyAction>;
-        dispatch(createAddBusStopAction(busStop));
-
-        const state = this.store.getState().Arrivals;        
-        dispatch(createLoadArrivalsAction(state.BusStops, state.Arrivals));
+    handleIncomingMessage(arrivalsResponse:GetBusStopArrivalsResponse) {
+        dispatchAction({
+            type: ArrivalsActionEnums.ArrivalsLoaded,
+            arrivals: arrivalsResponse.Arrivals
+        });
     }
 
     render() {
-        return (
-            <Provider store={this.store}>
-                <ArrivalsContainer />
-            </Provider>
-        );
+        return <ArrivalsContainer />;        
     }
 }
 
-ReactDOM.render(<ArrivalsComponent />, document.getElementById('root'));
+ReactDOM.render(
+<Provider store={store}>
+    <ArrivalsComponent />                
+</Provider>
+, document.getElementById('root'));

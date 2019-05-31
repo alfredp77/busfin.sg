@@ -1,18 +1,20 @@
-import { InterApplicationService, InterAppRequest, InterAppResponse, InterAppRequestHandler } from './InterApplicationService'
+import { interAppService, InterAppRequest, InterAppResponse, InterAppRequestHandler } from './InterApplicationService'
 import { BusStop, ArrivalData } from '../models/DataMall';
 import { ltaDataMall } from '../utils/DataMallService';
 import { toDictionary } from '../utils/Collections';
 import moment from 'moment';
 
+export const ADD_BUS_STOP_ARRIVALS_REQUEST = 'ADD_BUS_STOP_ARRIVALS_REQUEST';
 export const GET_BUS_STOP_ARRIVALS_REQUEST = 'GET_BUS_STOP_ARRIVALS_REQUEST';
-export type GET_BUS_STOP_ARRIVALS_REQUEST = typeof GET_BUS_STOP_ARRIVALS_REQUEST;
-
 export const GET_BUS_STOP_ARRIVALS_RESPONSE = 'GET_BUS_STOP_ARRIVALS_RESPONSE';
-export type GET_BUS_STOP_ARRIVALS_RESPONSE = typeof GET_BUS_STOP_ARRIVALS_RESPONSE;
 
 export interface ArrivalParams {
     BusStops: BusStop[]
     Arrivals: ArrivalData[]
+}
+
+export interface AddBusStopArrivalsRequest extends InterAppRequest {
+  BusStop: BusStop
 }
 
 export interface GetBusStopArrivalsRequest extends InterAppRequest, ArrivalParams {
@@ -21,12 +23,13 @@ export interface GetBusStopArrivalsRequest extends InterAppRequest, ArrivalParam
 export interface GetBusStopArrivalsResponse extends InterAppResponse, ArrivalParams {
 }
 
-function createResponseTopic(request:GetBusStopArrivalsRequest) {
-    return `${GET_BUS_STOP_ARRIVALS_REQUEST}_${request.Id}`;
+function createResponseTopic(request?:GetBusStopArrivalsRequest) {
+    if (request)      
+      return `${GET_BUS_STOP_ARRIVALS_RESPONSE}_${request.Id}`;
+    return GET_BUS_STOP_ARRIVALS_RESPONSE;
 }
 
 export class GetBusStopArrivalsRequestHandler implements InterAppRequestHandler {
-    public interAppService = InterApplicationService.getInstance();
     public ltaDataMallService = ltaDataMall;
 
     constructor(
@@ -45,6 +48,7 @@ export class GetBusStopArrivalsRequestHandler implements InterAppRequestHandler 
       }
 
       const responseTopic = createResponseTopic(request);
+      const generalResponseTopic = createResponseTopic();
       try {
         const existingBusStops = toDictionary(request.Arrivals.map(arrival => arrival.BusStop), busStop => busStop.BusStopCode);
         const newBusStops = toDictionary(request.BusStops.filter(busStop => !existingBusStops.has(busStop.BusStopCode)), busStop => busStop.BusStopCode);
@@ -64,37 +68,41 @@ export class GetBusStopArrivalsRequestHandler implements InterAppRequestHandler 
         let emptyBusStops:BusStop[] = [];
         response.BusStops = emptyBusStops.concat(response.Arrivals.map(arrival => arrival.BusStop));
         await this.showWindow();
-        this.interAppService.publish(responseTopic, response);
+        interAppService.publish(generalResponseTopic, response);
+        interAppService.publish(responseTopic, response);
       } catch (e) {
         response.Error = `Failed to fetch bus stop arrivals. Error: ${e}`;
-        this.interAppService.publish(responseTopic, response);
+        interAppService.publish(responseTopic, response);
       }
     }
 
     async initialize() {
       this.callbackOnInitialize();
-      this.interAppService.subscribe(GET_BUS_STOP_ARRIVALS_REQUEST, this.handleGetBusStopArrivals);
+      interAppService.subscribe(GET_BUS_STOP_ARRIVALS_REQUEST, this.handleGetBusStopArrivals);
       this.callbackOnReady();
     }
 }
 
 export class GetBusStopArrivalsRequestSender {
-    public interAppService = InterApplicationService.getInstance();
-  
-    getArrivals(arrivalParams:ArrivalParams, onResponse:(response:GetBusStopArrivalsResponse) => void) {
+    getArrivals(arrivalParams:ArrivalParams):Promise<GetBusStopArrivalsResponse> {
       const request:GetBusStopArrivalsRequest = {
         ...arrivalParams,
         Id: moment().format('x'), 
       }
-  
+
       const responseTopic = createResponseTopic(request);
-      this.interAppService.subscribe(responseTopic, (response:GetBusStopArrivalsResponse) => {
-        try {
-          onResponse(response);
-        } finally {
-          this.interAppService.unsubscribe(responseTopic);
-        }
-      })
-      this.interAppService.publish(GET_BUS_STOP_ARRIVALS_REQUEST, request);    
-    }  
-  }
+      return new Promise((response, reject) => {
+          interAppService.subscribe(responseTopic, (result:GetBusStopArrivalsResponse) => {
+          try {
+            response(result);
+          } catch (e) {
+            reject(e);
+          }
+          finally {
+            interAppService.unsubscribe(responseTopic);
+          }
+        })
+        interAppService.publish(GET_BUS_STOP_ARRIVALS_REQUEST, request);
+      });
+    }
+}

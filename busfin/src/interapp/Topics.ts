@@ -1,2 +1,0 @@
-export const BUS_STOP_ARRIVALS = 'BUS_STOP_ARRIVALS';
-export type BUS_STOP_ARRIVALS = typeof BUS_STOP_ARRIVALS;

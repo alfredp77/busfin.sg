@@ -1,4 +1,4 @@
-import { InterApplicationService, InterAppRequest, InterAppResponse, InterAppRequestHandler } from './InterApplicationService'
+import { InterAppRequest, InterAppResponse, InterAppRequestHandler, interAppService} from './InterApplicationService'
 import { BusStop } from '../models/DataMall';
 import { ltaDataMall } from '../utils/DataMallService';
 import moment from 'moment';
@@ -23,7 +23,6 @@ function createResponseTopic(request:GetBusStopsRequest) {
 }
 
 export class GetBusStopsRequestHandler implements InterAppRequestHandler {
-    public interAppService = InterApplicationService.getInstance();
     public ltaDataMallService = ltaDataMall;
 
     constructor(
@@ -42,19 +41,19 @@ export class GetBusStopsRequestHandler implements InterAppRequestHandler {
       const responseTopic = createResponseTopic(request);
       try {
         response.BusStops = await this.ltaDataMallService.searchBusStop(request.BusStopCode);
-        this.interAppService.publish(responseTopic, response);
+        interAppService.publish(responseTopic, response);
       } catch (e) {
         response.Error = `Failed to fetch bus stops. Error: ${e}`;
-        this.interAppService.publish(responseTopic, response);
+        interAppService.publish(responseTopic, response);
       }
     }
-
+    
     async initialize() {
       this.callbackOnInitialize();
 
       try {
         await this.ltaDataMallService.loadAllBusStops();
-        this.interAppService.subscribe(GET_BUS_STOPS_REQUEST, this.handleGetBusStops)
+        interAppService.subscribe(GET_BUS_STOPS_REQUEST, this.handleGetBusStops)
 
         this.callbackOnReady();
       } catch (e) {
@@ -64,27 +63,8 @@ export class GetBusStopsRequestHandler implements InterAppRequestHandler {
 }
 
 export class GetBusStopsRequestSender {
-  public interAppService = InterApplicationService.getInstance();
-
-  getBusStops(nearest:boolean, busStopCode:string, onResponse:(response:GetBusStopsResponse) => void) {
-    const request:GetBusStopsRequest = {
-      Id: moment().format('x'), 
-      Nearest: nearest,
-      BusStopCode: busStopCode
-    }
-
-    const responseTopic = createResponseTopic(request);
-    this.interAppService.subscribe(responseTopic, (response:GetBusStopsResponse) => {
-      try {
-        onResponse(response);
-      } finally {
-        this.interAppService.unsubscribe(responseTopic);
-      }
-    })
-    this.interAppService.publish(GET_BUS_STOPS_REQUEST, request);    
-  }  
-
-  getBusStops2(nearest:boolean, busStopCode:string):Promise<GetBusStopsResponse> {
+  
+  getBusStops(nearest:boolean, busStopCode:string):Promise<GetBusStopsResponse> {
     const request:GetBusStopsRequest = {
       Id: moment().format('x'), 
       Nearest: nearest,
@@ -93,17 +73,17 @@ export class GetBusStopsRequestSender {
 
     const responseTopic = createResponseTopic(request);
     return new Promise((response, reject) => {
-      this.interAppService.subscribe(responseTopic, (result:GetBusStopsResponse) => {
+        interAppService.subscribe(responseTopic, (result:GetBusStopsResponse) => {
         try {
           response(result);
         } catch (e) {
           reject(e);
         }
         finally {
-          this.interAppService.unsubscribe(responseTopic);
+          interAppService.unsubscribe(responseTopic);
         }
       })
-      this.interAppService.publish(GET_BUS_STOPS_REQUEST, request);
+      interAppService.publish(GET_BUS_STOPS_REQUEST, request);
     });
   }
 }
