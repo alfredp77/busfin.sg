@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { LayoutService } from '../utils/LayoutService';
 import { InterAppRequestHandler } from '../interapp/InterApplicationService';
 import { GetBusStopsRequestHandler } from '../interapp/BusStopsHandlers';
@@ -150,3 +151,5 @@ export const MenuButton = (props:any) =>  {
     </DefaultButton>
   )
 }
+
+ReactDOM.render(<Launcher />, document.getElementById('root'));

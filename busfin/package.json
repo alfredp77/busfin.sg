@@ -24,7 +24,7 @@
     "typescript": "3.4.5"
   },
   "scripts": {
-    "start": "parcel public/launcher.html public/busstops.html public/arrivals.html public/bus.ico -p 7777",
+    "start": "parcel public/* -p 7777",
     "build": "react-scripts build",
     "test": "react-scripts test",
     "eject": "react-scripts eject"

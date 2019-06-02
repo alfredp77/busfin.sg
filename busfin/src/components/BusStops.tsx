@@ -4,7 +4,6 @@ import { BusStop } from '../models/DataMall';
 import { connect, Provider } from 'react-redux';
 import { RootState } from '../redux-saga/RootState';
 import { store, dispatchAction } from '../redux-saga/Store';
-import { InterApplicationService } from '../interapp/InterApplicationService';
 import { Stack } from 'office-ui-fabric-react/lib/Stack';
 import { Checkbox } from 'office-ui-fabric-react/lib/Checkbox';
 import { TextField } from 'office-ui-fabric-react/lib/TextField';
@@ -17,13 +16,14 @@ import { BusStopsActionEnums } from '../redux-saga/BusStopsState';
 import { ArrivalsActionEnums } from '../redux-saga/ArrivalsState';
 
 interface BusStopsProps {
-    BusStops: BusStop[]
-    IsLoading: boolean    
+    busStops: BusStop[]
+    isLoading: boolean    
 }
 
 interface BusStopsActions {
     startLoading: () => void
     findBusStops: (busStopNumber:string) => void 
+    getArrivals: (busStop:BusStop) => void
 }
 
 interface BusStopsDisplayState {
@@ -32,8 +32,6 @@ interface BusStopsDisplayState {
 }
 
 export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsActions, BusStopsDisplayState> {
-    public interAppService:InterApplicationService = InterApplicationService.getInstance();
-
     constructor(props:any) {
 
         super(props);
@@ -57,10 +55,7 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
     }
 
     handleGetArrivals(busStop:BusStop) {
-        dispatchAction({
-            type: ArrivalsActionEnums.AddBusStop,
-            busStop: busStop
-        });
+        this.props.getArrivals(busStop);
     }
 
     render() {
@@ -90,8 +85,8 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
                     <TextField label="Bus stop code"  value={this.state.search} onChange={this.handleSearchChange} />
                     <Button text="Find" onClick={this.fetchBusStops} />
                 </Stack>
-                <BusStopsGrid rowData={this.props.BusStops} getArrivals={this.handleGetArrivals} />                
-                {this.props.IsLoading && 
+                <BusStopsGrid rowData={this.props.busStops} getArrivals={this.handleGetArrivals} />                
+                {this.props.isLoading && 
                     <Overlay isDarkThemed={true}>
                         <Stack verticalAlign="center" verticalFill={true} horizontalAlign="center">
                             <Spinner className={styles.spinner} label="Finding bus stops ..." labelPosition="top" />
@@ -106,21 +101,25 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
 
 export const mapStateToProps = (rootState: RootState) => {
     return {
-        BusStops: rootState.BusStops.BusStops,
-        IsLoading: rootState.BusStops.IsLoading
+        busStops: rootState.BusStops.BusStops,
+        isLoading: rootState.BusStops.IsLoading
     }
 }
   
 export const mapDispatchToProps = () => {
     return {
       startLoading: () => dispatchAction({
-        type: BusStopsActionEnums.StartLoading,
-        busStop: ''
-      }),
+            type: BusStopsActionEnums.StartLoading,
+            busStop: ''
+        }),
       findBusStops: (busStopNumber: string) => dispatchAction({
-        type: BusStopsActionEnums.StartLoading,
-        busStop: busStopNumber
-      }),
+            type: BusStopsActionEnums.StartLoading,
+            busStop: busStopNumber
+        }),
+      getArrivals: (busStop: BusStop) => dispatchAction({
+            type: ArrivalsActionEnums.AddBusStop,
+            busStop: busStop
+        })
     };
 };
 

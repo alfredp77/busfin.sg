@@ -62,3 +62,7 @@ typings/
 # next.js build output
 .next
 busfin/src/utils/DataMallKey.ts
+.vs/
+bin/
+obj/
+*.user

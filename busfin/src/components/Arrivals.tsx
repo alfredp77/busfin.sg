@@ -4,22 +4,17 @@ import { ArrivalData, BusStop } from '../models/DataMall';
 import { RootState } from '../redux-saga/RootState';
 import { Dispatch } from 'redux';
 import { connect, Provider } from 'react-redux';
-import { InterApplicationService } from '../interapp/InterApplicationService';
-import { GET_BUS_STOP_ARRIVALS_RESPONSE, GetBusStopArrivalsResponse } from '../interapp/ArrivalsHandlers';
+import { interAppService } from '../interapp/InterApplicationService';
+import { GET_BUS_STOP_ARRIVALS_RESPONSE, GetBusStopArrivalsResponse, ArrivalParams } from '../interapp/ArrivalsHandlers';
 import { store, dispatchAction } from '../redux-saga/Store';
 import { ArrivalsActionEnums } from '../redux-saga/ArrivalsState';
 
-interface ArrivalsProps {
-    busStops: BusStop[]
-    arrivals: ArrivalData[]
-}
-
 interface ArrivalsActions {
     removeArrival: (arrival:ArrivalData) => void
-    loadArrivals: (busStops:BusStop[], arrivals:ArrivalData[]) => void
+    loadArrivals: (arrivalParams:ArrivalParams) => void
 }
 
-export class ArrivalsDisplay extends React.Component<ArrivalsProps & ArrivalsActions, any> {
+export class ArrivalsDisplay extends React.Component<ArrivalParams & ArrivalsActions, any> {
     render() {
         // we'll change the display to use ag-grid, for now let's make it work first
         return (
@@ -37,7 +32,6 @@ interface ArrivalItemProps {
 }
 
 export const ArrivalItemDisplay = (props:ArrivalItemProps) => {
-    console.log(JSON.stringify(props.arrival.Arrival));
     return (
         <div className="arrivalItem">                        
             [{props.arrival.BusStop.BusStopCode}] [{props.arrival.Arrival.ServiceNo}] 
@@ -50,10 +44,11 @@ export const ArrivalItemDisplay = (props:ArrivalItemProps) => {
 
 
 export const mapStateToProps = (rootState: RootState) => {
-    return {
+    const arrivalParams:ArrivalParams =  {
         busStops: rootState.Arrivals.BusStops,
         arrivals: rootState.Arrivals.Arrivals
     }
+    return arrivalParams;
 }
 
 export const mapDispatchToProps = (dispatch: Dispatch) => {
@@ -62,10 +57,9 @@ export const mapDispatchToProps = (dispatch: Dispatch) => {
             type: ArrivalsActionEnums.RemoveArrival,
             busStop: arrival.BusStop}),
 
-        loadArrivals: (busStops:BusStop[], arrivals:ArrivalData[]) => dispatch({
+        loadArrivals: (arrivalParams:ArrivalParams[]) => dispatch({
             type: ArrivalsActionEnums.StartLoading,
-            busStops: busStops,
-            arrivals: arrivals
+            arrivalParams: arrivalParams
         })
     }
 }
@@ -76,8 +70,6 @@ export const ArrivalsContainer = connect(
 ) (ArrivalsDisplay);
 
 export class ArrivalsComponent extends React.Component {
-    public interAppService = InterApplicationService.getInstance();
-
     constructor(props:any) {
         super(props);
 
@@ -86,7 +78,7 @@ export class ArrivalsComponent extends React.Component {
     
     componentDidMount() {
         // subscribe to notifications
-        this.interAppService.subscribe(GET_BUS_STOP_ARRIVALS_RESPONSE, this.handleIncomingMessage);
+        interAppService.subscribe(GET_BUS_STOP_ARRIVALS_RESPONSE, this.handleIncomingMessage);
 
         // schedule periodic reload of arrivals
     }
@@ -94,7 +86,7 @@ export class ArrivalsComponent extends React.Component {
     handleIncomingMessage(arrivalsResponse:GetBusStopArrivalsResponse) {
         dispatchAction({
             type: ArrivalsActionEnums.ArrivalsLoaded,
-            arrivals: arrivalsResponse.Arrivals
+            arrivals: arrivalsResponse.arrivals
         });
     }
 

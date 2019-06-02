@@ -20,8 +20,7 @@ export interface AddBusStopArrivalsAction extends AnyAction {
 
 export interface LoadArrivalsAction extends AnyAction {
     type: ArrivalsActionEnums.StartLoading;
-    busStops: BusStop[];
-    arrivals: ArrivalData[];
+    arrivalParams: ArrivalParams[];
 }
 
 export interface ArrivalsLoadedAction extends AnyAction {
@@ -51,8 +50,8 @@ function* loadArrivalsSaga() {
         const state:ArrivalsState = yield select((state:RootState) => state.Arrivals);
 
         const params:ArrivalParams = {
-            BusStops: state.BusStops,
-            Arrivals: state.Arrivals
+            busStops: state.BusStops,
+            arrivals: state.Arrivals
         }
 
         const response:GetBusStopArrivalsResponse = yield call(arrivalsRequestSender.getArrivals, params);
@@ -65,7 +64,7 @@ function* loadArrivalsSaga() {
         else {
             yield put({
                 type: ArrivalsActionEnums.ArrivalsLoaded,
-                arrivals: response.Arrivals
+                arrivals: response.arrivals
             });
         }
 

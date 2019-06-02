@@ -9,8 +9,8 @@ export const GET_BUS_STOP_ARRIVALS_REQUEST = 'GET_BUS_STOP_ARRIVALS_REQUEST';
 export const GET_BUS_STOP_ARRIVALS_RESPONSE = 'GET_BUS_STOP_ARRIVALS_RESPONSE';
 
 export interface ArrivalParams {
-    BusStops: BusStop[]
-    Arrivals: ArrivalData[]
+    busStops: BusStop[]
+    arrivals: ArrivalData[]
 }
 
 export interface AddBusStopArrivalsRequest extends InterAppRequest {
@@ -43,18 +43,18 @@ export class GetBusStopArrivalsRequestHandler implements InterAppRequestHandler 
       let response:GetBusStopArrivalsResponse = {
         RequestId: request.Id,
         Error: '',
-        BusStops: [],
-        Arrivals: []
+        busStops: [],
+        arrivals: []
       }
 
       const responseTopic = createResponseTopic(request);
       const generalResponseTopic = createResponseTopic();
       try {
-        const existingBusStops = toDictionary(request.Arrivals.map(arrival => arrival.BusStop), busStop => busStop.BusStopCode);
-        const newBusStops = toDictionary(request.BusStops.filter(busStop => !existingBusStops.has(busStop.BusStopCode)), busStop => busStop.BusStopCode);
-        const arrivalsMap = toDictionary(request.Arrivals, arrival => arrival.Id);
+        const existingBusStops = toDictionary(request.arrivals.map(arrival => arrival.BusStop), busStop => busStop.BusStopCode);
+        const newBusStops = toDictionary(request.busStops.filter(busStop => !existingBusStops.has(busStop.BusStopCode)), busStop => busStop.BusStopCode);
+        const arrivalsMap = toDictionary(request.arrivals, arrival => arrival.Id);
 
-        const arrivals = await Promise.all(request.BusStops.map(async (busStop) => {
+        const arrivals = await Promise.all(request.busStops.map(async (busStop) => {
             const result = await ltaDataMall.getBusArrivals(busStop.BusStopCode);
             return result.map(item => ({
                 Id: `${busStop.BusStopCode}-${item.ServiceNo}`,
@@ -64,9 +64,9 @@ export class GetBusStopArrivalsRequestHandler implements InterAppRequestHandler 
         }));
 
         let empty:ArrivalData[] = [];
-        response.Arrivals = empty.concat(...arrivals).filter(arrival => arrivalsMap.has(arrival.Id) || newBusStops.has(arrival.BusStop.BusStopCode));
+        response.arrivals = empty.concat(...arrivals).filter(arrival => arrivalsMap.has(arrival.Id) || newBusStops.has(arrival.BusStop.BusStopCode));
         let emptyBusStops:BusStop[] = [];
-        response.BusStops = emptyBusStops.concat(response.Arrivals.map(arrival => arrival.BusStop));
+        response.busStops = emptyBusStops.concat(response.arrivals.map(arrival => arrival.BusStop));
         await this.showWindow();
         interAppService.publish(generalResponseTopic, response);
         interAppService.publish(responseTopic, response);
