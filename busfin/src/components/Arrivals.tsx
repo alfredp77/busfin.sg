@@ -8,6 +8,7 @@ import { interAppService } from '../interapp/InterApplicationService';
 import { GET_BUS_STOP_ARRIVALS_RESPONSE, GetBusStopArrivalsResponse, ArrivalParams } from '../interapp/ArrivalsHandlers';
 import { store, dispatchAction } from '../redux-saga/Store';
 import { ArrivalsActionEnums } from '../redux-saga/ArrivalsState';
+import { ArrivalsGrid } from './ArrivalsGrid';
 
 interface ArrivalsActions {
     removeArrival: (arrival:ArrivalData) => void
@@ -19,29 +20,11 @@ export class ArrivalsDisplay extends React.Component<ArrivalParams & ArrivalsAct
         // we'll change the display to use ag-grid, for now let's make it work first
         return (
             <div className="arrivals">
-                {this.props.arrivals.length === 0 ? 
-                    <p>No bus stops selected</p> : 
-                    this.props.arrivals.map(arrival => <ArrivalItemDisplay arrival={arrival}/>)}
+                <ArrivalsGrid rowData={this.props.arrivals} />                
             </div>
         )
     }
 }
-
-interface ArrivalItemProps {
-    arrival: ArrivalData
-}
-
-export const ArrivalItemDisplay = (props:ArrivalItemProps) => {
-    return (
-        <div className="arrivalItem">                        
-            [{props.arrival.BusStop.BusStopCode}] [{props.arrival.Arrival.ServiceNo}] 
-            [{props.arrival.Arrival.NextBus.EstimatedArrivalInMins}]
-            [{props.arrival.Arrival.NextBus2.EstimatedArrivalInMins}]
-            [{props.arrival.Arrival.NextBus3.EstimatedArrivalInMins}] )}
-        </div>
-    )
-}
-
 
 export const mapStateToProps = (rootState: RootState) => {
     const arrivalParams:ArrivalParams =  {

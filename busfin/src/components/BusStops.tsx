@@ -17,7 +17,8 @@ import { ArrivalsActionEnums } from '../redux-saga/ArrivalsState';
 
 interface BusStopsProps {
     busStops: BusStop[]
-    isLoading: boolean    
+    isLoading: boolean
+    loadingText: string    
 }
 
 interface BusStopsActions {
@@ -83,13 +84,13 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
                 <Stack className={styles.root}>
                     <Checkbox label="Nearest" checked={this.state.nearest} onChange={this.handleNearestChange} />
                     <TextField label="Bus stop code"  value={this.state.search} onChange={this.handleSearchChange} />
-                    <Button text="Find" onClick={this.fetchBusStops} />
+                    <Button text="Find" onClick={this.fetchBusStops} disabled={this.props.isLoading} />
                 </Stack>
                 <BusStopsGrid rowData={this.props.busStops} getArrivals={this.handleGetArrivals} />                
                 {this.props.isLoading && 
                     <Overlay isDarkThemed={true}>
                         <Stack verticalAlign="center" verticalFill={true} horizontalAlign="center">
-                            <Spinner className={styles.spinner} label="Finding bus stops ..." labelPosition="top" />
+                            <Spinner className={styles.spinner} label={this.props.loadingText} labelPosition="top" />
                         </Stack>
                     </Overlay>
                 }
@@ -102,7 +103,8 @@ export class BusStopsDisplay extends React.Component<BusStopsProps & BusStopsAct
 export const mapStateToProps = (rootState: RootState) => {
     return {
         busStops: rootState.BusStops.BusStops,
-        isLoading: rootState.BusStops.IsLoading
+        isLoading: rootState.BusStops.IsLoading || rootState.Arrivals.IsLoading,
+        loadingText: rootState.BusStops.IsLoading ? 'Finding bus stops ...' : rootState.Arrivals.IsLoading ? 'Loading arrivals ...' : ''
     }
 }
   
