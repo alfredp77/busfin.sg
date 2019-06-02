@@ -11,7 +11,7 @@ import { ArrivalsActionEnums } from '../redux-saga/ArrivalsState';
 
 interface ArrivalsActions {
     removeArrival: (arrival:ArrivalData) => void
-    loadArrivals: (arrivalParams:ArrivalParams) => void
+    loadArrivals: (arrivalParams:ArrivalParams[]) => void
 }
 
 export class ArrivalsDisplay extends React.Component<ArrivalParams & ArrivalsActions, any> {
