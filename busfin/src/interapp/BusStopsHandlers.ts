@@ -23,8 +23,6 @@ function createResponseTopic(request:GetBusStopsRequest) {
 }
 
 export class GetBusStopsRequestHandler implements InterAppRequestHandler {
-    public ltaDataMallService = ltaDataMall;
-
     constructor(
       private callbackOnInitialize:() => void,
       private callbackOnReady:(errorMsg?:string) => void) {
@@ -40,19 +38,18 @@ export class GetBusStopsRequestHandler implements InterAppRequestHandler {
 
       const responseTopic = createResponseTopic(request);
       try {
-        response.BusStops = await this.ltaDataMallService.searchBusStop(request.BusStopCode);
-        interAppService.publish(responseTopic, response);
+        response.BusStops = await ltaDataMall.searchBusStop(request.BusStopCode);
       } catch (e) {
         response.Error = `Failed to fetch bus stops. Error: ${e}`;
-        interAppService.publish(responseTopic, response);
       }
+      interAppService.publish(responseTopic, response);
     }
     
     async initialize() {
       this.callbackOnInitialize();
 
       try {
-        await this.ltaDataMallService.loadAllBusStops();
+        await ltaDataMall.loadAllBusStops();
         interAppService.subscribe(GET_BUS_STOPS_REQUEST, this.handleGetBusStops)
 
         this.callbackOnReady();
