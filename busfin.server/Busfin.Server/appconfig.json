@@ -1,3 +1,6 @@
 {
-  "port": 7000
+  "ports": {
+    "openfin": 7000,
+    "runtime":  6000 
+  } 
 }

@@ -3,7 +3,7 @@ using Microsoft.Extensions.Hosting;
 
 namespace Busfin.Server
 {
-    [Route("runtime")]
+    [Route("runtime"), PortActionConstraint(PortTypes.Runtime)]
     public class RuntimeController : Controller
     {
         private readonly IApplicationLifetime _appLifetime;

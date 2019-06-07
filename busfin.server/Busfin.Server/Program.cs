@@ -1,5 +1,6 @@
 ﻿using System;
 using System.IO;
+using System.Reflection;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -13,15 +14,21 @@ namespace Busfin.Server
     {
         static void Main(string[] args)
         {
+            var assemblyPath = new Uri(Assembly.GetExecutingAssembly().CodeBase).LocalPath;
+            var basePath = Path.GetDirectoryName(assemblyPath);
             var config = new ConfigurationBuilder()
-                .SetBasePath(Directory.GetCurrentDirectory())
+                .SetBasePath(basePath)
                 .AddJsonFile("appconfig.json")
                 .Build();
 
+            var runtimePort = config.GetPort(PortTypes.Runtime);
+            PortActionConstraint.AddPort(PortTypes.Runtime, runtimePort);
+
+            var openfinPort = config.GetPort(PortTypes.Openfin);
             var webHost = new WebHostBuilder()
                 .UseKestrel()
                 .UseWebRoot("dist")
-                .UseUrls($"http://localhost:{config["Port"]}")
+                .UseUrls($"http://localhost:{openfinPort}", $"http://localhost:{runtimePort}")
                 .UseStartup<Program>()
                 .Build();
             webHost.Run();
@@ -30,7 +37,7 @@ namespace Busfin.Server
 
         public void ConfigureServices(IServiceCollection services)
         {
-            services.AddMvc();
+            services.AddMvc();            
         }
 
         public void Configure(IApplicationBuilder app, IHostingEnvironment env, ILoggerFactory loggerFactory)
@@ -38,6 +45,5 @@ namespace Busfin.Server
             app.UseStaticFiles()
                .UseMvc();
         }
-
     }
 }
